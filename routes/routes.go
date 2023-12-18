@@ -23,6 +23,13 @@ type deps struct {
 	c *config.Config
 }
 
+func removeGitExtension(s string) string {
+	if len(s) >= 4 && s[len(s)-4:] == ".git" {
+		return s[:len(s)-4]
+	}
+	return s
+}
+
 func (d *deps) Index(w http.ResponseWriter, r *http.Request) {
 	dirs, err := os.ReadDir(d.c.Repo.ScanPath)
 	if err != nil {
@@ -59,12 +66,21 @@ func (d *deps) Index(w http.ResponseWriter, r *http.Request) {
 
 		desc := getDescription(path)
 
-		infos = append(infos, info{
-			Name: dir.Name(),
-			Desc: desc,
-			Idle: humanize.Time(c.Author.When),
-			d:    c.Author.When,
-		})
+		if strings.HasSuffix(dir.Name(), ".git") {
+			infos = append(infos, info{
+				Name: dir.Name()[:len(dir.Name())-4],
+				Desc: desc,
+				Idle: humanize.Time(c.Author.When),
+				d:    c.Author.When,
+			})
+		} else {
+			infos = append(infos, info{
+				Name: dir.Name(),
+				Desc: desc,
+				Idle: humanize.Time(c.Author.When),
+				d:    c.Author.When,
+			})
+		}
 	}
 
 	sort.Slice(infos, func(i, j int) bool {
@@ -94,7 +110,7 @@ func (d *deps) RepoIndex(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 
 	gr, _ := git.Open(path, "")
-		if gr == nil && !strings.HasSuffix(name, ".git") {
+	if gr == nil && !strings.HasSuffix(name, ".git") {
 		gr, _ = git.Open(path+".git", "")
 	}
 
@@ -146,7 +162,7 @@ func (d *deps) RepoIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := make(map[string]any)
-	data["name"] = name
+	data["name"] = removeGitExtension(name)
 	data["ref"] = mainBranch
 	data["readme"] = readmeContent
 	data["commits"] = commits
@@ -176,8 +192,16 @@ func (d *deps) RepoTree(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 	gr, err := git.Open(path, ref)
 	if err != nil {
-		d.Write404(w)
-		return
+		if strings.HasSuffix(name, ".git") {
+			d.Write404(w)
+			return
+		} else {
+			gr, err = git.Open(path+".git", ref)
+			if err != nil {
+				d.Write404(w)
+				return
+			}
+		}
 	}
 
 	files, err := gr.FileTree(treePath)
@@ -211,8 +235,16 @@ func (d *deps) FileContent(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 	gr, err := git.Open(path, ref)
 	if err != nil {
-		d.Write404(w)
-		return
+		if strings.HasSuffix(name, ".git") {
+			d.Write404(w)
+			return
+		} else {
+			gr, err = git.Open(path+".git", ref)
+			if err != nil {
+				d.Write404(w)
+				return
+			}
+		}
 	}
 
 	contents, err := gr.FileContent(treePath)
@@ -237,8 +269,16 @@ func (d *deps) Log(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 	gr, err := git.Open(path, ref)
 	if err != nil {
-		d.Write404(w)
-		return
+		if strings.HasSuffix(name, ".git") {
+			d.Write404(w)
+			return
+		} else {
+			gr, err = git.Open(path+".git", ref)
+			if err != nil {
+				d.Write404(w)
+				return
+			}
+		}
 	}
 
 	commits, err := gr.Commits()
@@ -276,8 +316,16 @@ func (d *deps) Diff(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 	gr, err := git.Open(path, ref)
 	if err != nil {
-		d.Write404(w)
-		return
+		if strings.HasSuffix(name, ".git") {
+			d.Write404(w)
+			return
+		} else {
+			gr, err = git.Open(path+".git", ref)
+			if err != nil {
+				d.Write404(w)
+				return
+			}
+		}
 	}
 
 	diff, err := gr.Diff()
@@ -315,9 +363,20 @@ func (d *deps) Refs(w http.ResponseWriter, r *http.Request) {
 
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 	gr, err := git.Open(path, "")
+
+	ref := flow.Param(r.Context(), "ref")
+
 	if err != nil {
-		d.Write404(w)
-		return
+		if strings.HasSuffix(name, ".git") {
+			d.Write404(w)
+			return
+		} else {
+			gr, err = git.Open(path+".git", ref)
+			if err != nil {
+				d.Write404(w)
+				return
+			}
+		}
 	}
 
 	tags, err := gr.Tags()
