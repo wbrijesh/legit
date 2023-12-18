@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"git.icyphox.sh/legit/config"
@@ -20,6 +21,14 @@ import (
 
 type deps struct {
 	c *config.Config
+}
+
+
+func removeGitExtension(s string) string {
+	if len(s) >= 4 && s[len(s)-4:] == ".git" {
+		return s[:len(s)-4]
+	}
+	return s
 }
 
 func (d *deps) Index(w http.ResponseWriter, r *http.Request) {
@@ -92,10 +101,9 @@ func (d *deps) RepoIndex(w http.ResponseWriter, r *http.Request) {
 	name = filepath.Clean(name)
 	path := filepath.Join(d.c.Repo.ScanPath, name)
 
-	gr, err := git.Open(path, "")
-	if err != nil {
-		d.Write404(w)
-		return
+	gr, _ := git.Open(path, "")
+		if gr == nil && !strings.HasSuffix(name, ".git") {
+		gr, _ = git.Open(path+".git", "")
 	}
 
 	commits, err := gr.Commits()
@@ -146,7 +154,7 @@ func (d *deps) RepoIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := make(map[string]any)
-	data["name"] = name
+	data["name"] = removeGitExtension(name)
 	data["ref"] = mainBranch
 	data["readme"] = readmeContent
 	data["commits"] = commits

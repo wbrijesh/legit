@@ -39,6 +39,10 @@ func (g *GitRepo) FileTree(path string) ([]NiceTree, error) {
 	return files, nil
 }
 
+func removeGitExt(s string) string {
+	return s[:len(s)-4]
+}
+
 // A nicer git tree representation.
 type NiceTree struct {
 	Name      string
@@ -55,7 +59,7 @@ func makeNiceTree(t *object.Tree) []NiceTree {
 		mode, _ := e.Mode.ToOSFileMode()
 		sz, _ := t.Size(e.Name)
 		nts = append(nts, NiceTree{
-			Name:   e.Name,
+			Name:   removeGitExt(e.Name),
 			Mode:   mode.String(),
 			IsFile: e.Mode.IsFile(),
 			Size:   sz,

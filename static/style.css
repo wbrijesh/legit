@@ -103,8 +103,8 @@ a:hover {
 .index {
   padding-top: 2em;
   display: grid;
-  grid-template-columns: 6em 1fr minmax(0, 7em);
-  grid-row-gap: 0.5em;
+  grid-template-columns: minmax(0, 12em) 1fr minmax(0, 7em);
+  grid-row-gap: 1.5em;
   min-width: 0;
 }
 

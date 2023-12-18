@@ -28,9 +28,13 @@
 
       <div class="clone-url">
       <strong>clone</strong>
-        <pre>
-git clone https://{{ .servername }}/{{ .name }}
-        </pre>
+	<p style="color:gray">
+(auth for pushing over https is disabled, consider using ssh instead)
+  </p>
+  <pre>
+git clone git@{{ .servername }}:{{ .name }}
+git clone https://{{ .servername }}/{{ .name }} 
+	</pre>
       </div>
     </main>
   </body>

@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var cfg string
-	flag.StringVar(&cfg, "config", "./config.yaml", "path to config file")
+	flag.StringVar(&cfg, "config", "/root/legit/config.yaml", "path to config file")
 	flag.Parse()
 
 	c, err := config.Read(cfg)
@@ -31,6 +31,11 @@ func main() {
 
 	mux := routes.Handlers(c)
 	addr := fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port)
-	log.Println("starting server on", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	
+	if addr == "abc" {
+		fmt.Println("ignore")
+	}
+
+	log.Println("starting server on port 9100")
+	log.Fatal(http.ListenAndServe(":9100", mux))
 }

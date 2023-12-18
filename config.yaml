@@ -12,9 +12,9 @@ dirs:
   templates: ./templates
   static: ./static
 meta:
-  title: git good
+  title: Brijesh's Git Server
   description: i think it's a skill issue
 server:
-  name: git.icyphox.sh
-  host: 127.0.0.1
-  port: 5555
+  name: brijesh.dev
+  host: 12.34.56.78
+  port: 443
