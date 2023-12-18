@@ -23,14 +23,6 @@ type deps struct {
 	c *config.Config
 }
 
-
-func removeGitExtension(s string) string {
-	if len(s) >= 4 && s[len(s)-4:] == ".git" {
-		return s[:len(s)-4]
-	}
-	return s
-}
-
 func (d *deps) Index(w http.ResponseWriter, r *http.Request) {
 	dirs, err := os.ReadDir(d.c.Repo.ScanPath)
 	if err != nil {
@@ -154,7 +146,7 @@ func (d *deps) RepoIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := make(map[string]any)
-	data["name"] = removeGitExtension(name)
+	data["name"] = name
 	data["ref"] = mainBranch
 	data["readme"] = readmeContent
 	data["commits"] = commits
